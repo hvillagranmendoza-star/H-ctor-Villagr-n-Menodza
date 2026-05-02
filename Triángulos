@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clasificador de Triángulos — Hector Villagran Mendoza</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #16161a;
+      --border: #2a2a35;
+      --accent: #c8f04a;
+      --accent2: #5b6cf9;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --error: #f04a6a;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: -200px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(91,108,249,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -150px;
+      right: -150px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(200,240,74,0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 500px;
+      position: relative;
+      z-index: 1;
+      animation: fadeIn 0.6s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    header { margin-bottom: 36px; }
+
+    .chip {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(200,240,74,0.3);
+      background: rgba(200,240,74,0.06);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 7vw, 44px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--accent2);
+    }
+
+    .author {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      margin-top: 10px;
+      text-transform: uppercase;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 14px;
+    }
+
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .input-group input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 24px;
+      padding: 14px 10px;
+      width: 100%;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .input-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(200,240,74,0.12);
+    }
+
+    .input-group input.input-error {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(240,74,106,0.12);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      color: #0d0d0f;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(200,240,74,0.28);
+    }
+
+    .btn:active { transform: translateY(0); }
+
+    .error-msg {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--error);
+      text-align: center;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      display: none;
+    }
+
+    .result-card.visible {
+      display: block;
+      animation: slideUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+
+    canvas#triCanvas { flex-shrink: 0; border-radius: 8px; }
+
+    .result-text { flex: 1; min-width: 0; }
+
+    .res-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .res-name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .res-name.sides  { color: var(--accent); }
+    .res-name.angles { color: var(--accent2); }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid;
+    }
+
+    .tag.t-sides {
+      color: var(--accent);
+      border-color: rgba(200,240,74,0.3);
+      background: rgba(200,240,74,0.07);
+    }
+
+    .tag.t-angles {
+      color: var(--accent2);
+      border-color: rgba(91,108,249,0.3);
+      background: rgba(91,108,249,0.07);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    .props {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .prop-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 18px;
+    }
+
+    .prop-lbl {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-top: 3px;
+    }
+
+    footer {
+      margin-top: 28px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <header>
+    <div class="chip">Geometría · Triángulos</div>
+    <h1>Clasifica tu<br><em>triángulo</em></h1>
+    <p class="author">Hector Villagran Mendoza</p>
+  </header>
+
+  <div class="card">
+    <div class="inputs-grid">
+      <div class="input-group">
+        <label>Lado A</label>
+        <input type="number" id="sideA" placeholder="0" min="0.01" step="any" />
+      </div>
+      <div class="input-group">
+        <label>Lado B</label>
+        <input type="number" id="sideB" placeholder="0" min="0.01" step="any" />
+      </div>
+      <div class="input-group">
+        <label>Lado C</label>
+        <input type="number" id="sideC" placeholder="0" min="0.01" step="any" />
+      </div>
+    </div>
+    <button class="btn" onclick="classify()">Clasificar →</button>
+    <div class="error-msg" id="errMsg"></div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-top">
+      <canvas id="triCanvas" width="110" height="100"></canvas>
+      <div class="result-text">
+        <div class="res-badge">Por sus lados</div>
+        <div class="res-name sides"  id="rSides"></div>
+        <div class="res-badge" style="margin-top:10px">Por sus ángulos</div>
+        <div class="res-name angles" id="rAngles"></div>
+        <div class="tags" id="rTags"></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="props">
+      <div>
+        <div class="prop-val" id="pA">—</div>
+        <div class="prop-lbl">Ángulo α</div>
+      </div>
+      <div>
+        <div class="prop-val" id="pB">—</div>
+        <div class="prop-lbl">Ángulo β</div>
+      </div>
+      <div>
+        <div class="prop-val" id="pC">—</div>
+        <div class="prop-lbl">Ángulo γ</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>© Hector Villagran Mendoza · Clasificador de Triángulos</footer>
+
+</div>
+
+<script>
+  function classify() {
+    const inputs = ['sideA','sideB','sideC'].map(id => document.getElementById(id));
+    const errMsg     = document.getElementById('errMsg');
+    const resultCard = document.getElementById('resultCard');
+
+    inputs.forEach(el => el.classList.remove('input-error'));
+    errMsg.classList.remove('visible');
+    resultCard.classList.remove('visible');
+
+    const [a, b, c] = inputs.map(el => parseFloat(el.value));
+
+    let hasError = false;
+    inputs.forEach((el, i) => {
+      if (![a,b,c][i] || [a,b,c][i] <= 0) { el.classList.add('input-error'); hasError = true; }
+    });
+    if (hasError) { showError('Ingresa valores positivos en los tres lados.'); return; }
+
+    if (a + b <= c || a + c <= b || b + c <= a) {
+      inputs.forEach(el => el.classList.add('input-error'));
+      showError('Estos lados no forman un triángulo válido.');
+      return;
+    }
+
+    const eps = 1e-9;
+    let sides;
+    if (Math.abs(a-b) < eps && Math.abs(b-c) < eps) sides = 'Equilátero';
+    else if (Math.abs(a-b) < eps || Math.abs(b-c) < eps || Math.abs(a-c) < eps) sides = 'Isósceles';
+    else sides = 'Escaleno';
+
+    const degA = acosDeg((b*b + c*c - a*a) / (2*b*c));
+    const degB = acosDeg((a*a + c*c - b*b) / (2*a*c));
+    const degC = 180 - degA - degB;
+    const maxDeg = Math.max(degA, degB, degC);
+
+    let angles;
+    if (Math.abs(maxDeg - 90) < 0.01) angles = 'Rectángulo';
+    else if (maxDeg > 90)             angles = 'Obtusángulo';
+    else                              angles = 'Acutángulo';
+
+    document.getElementById('rSides').textContent  = sides;
+    document.getElementById('rAngles').textContent = angles;
+    document.getElementById('pA').textContent = degA.toFixed(1) + '°';
+    document.getElementById('pB').textContent = degB.toFixed(1) + '°';
+    document.getElementById('pC').textContent = degC.toFixed(1) + '°';
+    document.getElementById('rTags').innerHTML =
+      `<span class="tag t-sides">${sides}</span>` +
+      `<span class="tag t-angles">${angles}</span>`;
+
+    drawTriangle(b, c, degA);
+
+    resultCard.classList.remove('visible');
+    void resultCard.offsetWidth;
+    resultCard.classList.add('visible');
+  }
+
+  function acosDeg(x) {
+    return Math.acos(Math.max(-1, Math.min(1, x))) * 180 / Math.PI;
+  }
+
+  function drawTriangle(adjB, adjC, angDeg) {
+    const canvas = document.getElementById('triCanvas');
+    const ctx    = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const angRad = angDeg * Math.PI / 180;
+    const scale  = Math.min(W, H) / (Math.max(adjB, adjC) * 1.5);
+
+    const x1 = 0,            y1 = 0;
+    const x2 = adjB * scale,  y2 = 0;
+    const x3 = adjC * scale * Math.cos(angRad);
+    const y3 = -adjC * scale * Math.sin(angRad);
+
+    const minX = Math.min(x1,x2,x3), minY = Math.min(y1,y2,y3);
+    const maxX = Math.max(x1,x2,x3), maxY = Math.max(y1,y2,y3);
+    const ox = (W - (maxX - minX)) / 2 - minX;
+    const oy = (H - (maxY - minY)) / 2 - minY;
+
+    ctx.beginPath();
+    ctx.moveTo(x1+ox, y1+oy);
+    ctx.lineTo(x2+ox, y2+oy);
+    ctx.lineTo(x3+ox, y3+oy);
+    ctx.closePath();
+    ctx.fillStyle   = 'rgba(91,108,249,0.13)';
+    ctx.fill();
+    ctx.strokeStyle = '#5b6cf9';
+    ctx.lineWidth   = 2;
+    ctx.lineJoin    = 'round';
+    ctx.stroke();
+
+    [[x1+ox,y1+oy],[x2+ox,y2+oy],[x3+ox,y3+oy]].forEach(([px,py]) => {
+      ctx.beginPath();
+      ctx.arc(px, py, 3.5, 0, Math.PI*2);
+      ctx.fillStyle = '#c8f04a';
+      ctx.fill();
+    });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errMsg');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') classify(); });
+</script>
+
+</body>
+</html>
